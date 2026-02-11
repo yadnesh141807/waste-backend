@@ -24,7 +24,7 @@ app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 // ===================== TEST ROUTE =====================
 app.get("/", (req, res) => {
-  res.send("Waste Management Backend Running ✅");
+  res.send("Waste Backend is running 🚀");
 });
 
 // ===================== ROUTES =====================
