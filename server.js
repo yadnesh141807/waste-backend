@@ -2,7 +2,7 @@ const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
 const bcrypt = require("bcryptjs");
-const path = require("path"); // 🔥 ADDED
+const path = require("path");
 require("dotenv").config();
 
 const Admin = require("./models/Admin");
@@ -11,7 +11,7 @@ const Admin = require("./models/Admin");
 const adminRoutes = require("./routes/adminRoutes");
 const wasteRoutes = require("./routes/wasteRoutes");
 const authRoutes = require("./routes/authRoutes");
-const driverRoutes = require("./routes/driverRoutes"); // 🔥 ADDED
+const driverRoutes = require("./routes/driverRoutes");
 
 const app = express();
 
@@ -19,19 +19,24 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// 🔥🔥🔥 IMAGE STATIC SERVE (MOST IMPORTANT)
+// 🔥 Static folder for uploaded images
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
-// ===================== TEST ROUTE =====================
+// ===================== ROOT TEST ROUTE =====================
 app.get("/", (req, res) => {
-  res.send("Waste Backend is running 🚀");
+  res.status(200).send("Waste Backend is running 🚀");
 });
 
-// ===================== ROUTES =====================
+// ===================== API ROUTES =====================
 app.use("/api/admin", adminRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/waste", wasteRoutes);
-app.use("/api/driver", driverRoutes); // 🔥 ADDED
+app.use("/api/driver", driverRoutes);
+
+// ===================== 404 FALLBACK =====================
+app.use((req, res) => {
+  res.status(404).send("Route not found ❌");
+});
 
 // ===================== AUTO CREATE ADMIN =====================
 const createDefaultAdmin = async () => {
@@ -65,7 +70,7 @@ mongoose
   });
 
 // ===================== SERVER START =====================
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
+const PORT = process.env.PORT || 10000;
+app.listen(PORT, "0.0.0.0", () => {
   console.log(`🚀 Server running on port ${PORT}`);
 });
