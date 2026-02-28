@@ -63,6 +63,10 @@ mongoose
   .connect(process.env.MONGO_URI)
   .then(async () => {
     console.log("✅ MongoDB connected");
+
+    // 🔥 ADD THIS DEBUG LINE
+    console.log("🔥 Connected DB Name:", mongoose.connection.name);
+
     await createDefaultAdmin();
   })
   .catch((err) => {
