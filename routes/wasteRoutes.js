@@ -1,84 +1,127 @@
-const express = require("express");
-const Waste = require("../models/Waste");
-const auth = require("../middleware/auth");
-const upload = require("../middleware/upload");
+import "./WasteForm.css";
+import { useState } from "react";
+import API from "../api";
 
-const router = express.Router();
+function WasteForm({ type, setSelectedType, wasteList, setWasteList, refreshWaste, setShowBhangarMenu }) {
 
-// ===============================
-// SUBMIT WASTE (USER)
-// ===============================
-router.post(
-  "/submit",
-  auth,
-  upload.single("image"),
-  async (req, res) => {
+  const [description, setDescription] = useState("");
+  const [location, setLocation] = useState("");
+  const [weight, setWeight] = useState("");
+  const [quantity, setQuantity] = useState("");
+  const [image, setImage] = useState(null);
+
+  const handleSubmit = async () => {
+
     try {
-      const waste = new Waste({
-        ...req.body,
-        image: req.file ? req.file.filename : null,
-        userId: req.userId,
+
+      const token = localStorage.getItem("token");
+
+      const formData = new FormData();
+      formData.append("type", type);
+      formData.append("description", description);
+      formData.append("location", location);
+      formData.append("weight", weight);
+      formData.append("quantity", quantity);
+
+      if (image) {
+        formData.append("image", image);
+      }
+
+      await API.post("/waste/submit", formData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
       });
 
-      await waste.save();
-      res.status(201).json({ message: "Waste submitted", waste });
-    } catch (err) {
-      res.status(500).json({ error: err.message });
-    }
-  }
-);
+      alert("Waste submitted successfully ✅");
 
-// ===============================
-// GET ALL WASTE (ADMIN)
-// ===============================
-router.get("/", async (req, res) => {
-  const waste = await Waste.find().sort({ createdAt: -1 });
-  res.json(waste);
-});
+      refreshWaste();
+      setSelectedType("");
 
-// ===============================
-// GET USER WASTE
-// ===============================
-router.get("/my", auth, async (req, res) => {
-  const waste = await Waste.find({ userId: req.userId }).sort({
-    createdAt: -1,
-  });
-  res.json(waste);
-});
+    } catch (error) {
 
-// ===============================
-// UPDATE STATUS
-// ===============================
-router.put("/:id", async (req, res) => {
-  try {
-    const updateData = { ...req.body };
+      console.log("Waste submit error:", error);
+      alert("Error submitting waste ❌");
 
-    if (req.body.assignedDriver || req.body.driverId) {
-      updateData.status = "Assigned";
     }
 
-    const updated = await Waste.findByIdAndUpdate(
-      req.params.id,
-      updateData,
-      { new: true }
-    );
+  };
 
-    res.json(updated);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
+  return (
+    <div className="form-page">
+      <div className="form-card">
 
-// ===============================
-// DELETE WASTE (ADMIN)
-// ===============================
-router.delete("/:id", auth, async (req, res) => {
-  try {
-    await Waste.findByIdAndDelete(req.params.id);
-    res.json({ message: "Waste deleted successfully" });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
+        <h2 className="form-title">{type} Waste Submission</h2>
+        <p className="form-subtitle">Operational Intake Form</p>
 
-module.exports = router;
+        <div className="form-grid">
+
+          <div className="form-group full">
+            <label>Description</label>
+            <textarea
+              placeholder="Briefly describe the waste material"
+              onChange={(e) => setDescription(e.target.value)}
+            />
+          </div>
+
+          <div className="form-group">
+            <label>Pickup Location</label>
+            <input
+              type="text"
+              placeholder="Facility / Area"
+              onChange={(e) => setLocation(e.target.value)}
+            />
+          </div>
+
+          <div className="form-group">
+            <label>Quantity</label>
+            <input
+              type="number"
+              placeholder="Total units"
+              onChange={(e) => setQuantity(e.target.value)}
+            />
+          </div>
+
+          <div className="form-group">
+            <label>Estimated Weight (kg)</label>
+            <input
+              type="number"
+              placeholder="e.g. 2.5"
+              onChange={(e) => setWeight(e.target.value)}
+            />
+          </div>
+
+          <div className="form-group full">
+            <label>Attach Image</label>
+            <input
+              type="file"
+              accept="image/*"
+              className="file-input"
+              onChange={(e) => setImage(e.target.files[0])}
+            />
+          </div>
+
+        </div>
+
+        <div className="form-actions">
+
+          <button
+            className="secondary-btn"
+            onClick={() => setShowBhangarMenu(true)}
+          >
+            Cancel
+          </button>
+
+          <button
+            className="primary-btn"
+            onClick={handleSubmit}
+          >
+            Submit for Collection
+          </button>
+
+        </div>
+
+      </div>
+    </div>
+  );
+}
