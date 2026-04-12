@@ -101,7 +101,7 @@ router.post("/create-driver", async (req, res) => {
   }
 });
 
-// 🔥 ASSIGN DRIVER TO WASTE ✅ FIXED
+// 🔥 ASSIGN DRIVER TO WASTE ✅ CLEAN FIX
 router.put("/assign-driver", async (req, res) => {
   try {
     const { wasteId, driverId } = req.body;
@@ -111,11 +111,10 @@ router.put("/assign-driver", async (req, res) => {
     }
 
     await Waste.findByIdAndUpdate(wasteId, {
-        $set: {
-      driverId: driverId, // ✅ SAME FIELD AS MODEL
-       assignedDriver: driverId,
-      status: "Assigned",
-        }
+      $set: {
+        driverId: driverId, // ✅ ONLY THIS (main field)
+        status: "Assigned",
+      }
     });
 
     res.json({ message: "Driver assigned successfully" });

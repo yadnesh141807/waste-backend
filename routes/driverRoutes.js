@@ -33,11 +33,16 @@ router.post("/login", async (req, res) => {
   }
 });
 
-// 🚚 GET ASSIGNED WASTES
+// 🚚 GET ASSIGNED WASTES ✅ FIXED
 router.get("/wastes/:driverId", async (req, res) => {
   try {
+    const driverId = new mongoose.Types.ObjectId(req.params.driverId);
+
     const wastes = await Waste.find({
-      driverId: new mongoose.Types.ObjectId(req.params.driverId),
+      $or: [
+        { driverId: driverId },          // new data
+        { assignedDriver: driverId }     // old data support
+      ]
     });
 
     res.json(wastes);
@@ -47,7 +52,7 @@ router.get("/wastes/:driverId", async (req, res) => {
   }
 });
 
-// ✅ MARK AS COLLECTED (🔥 MISSING ROUTE - FINAL FIX)
+// ✅ MARK AS COLLECTED
 router.put("/collect/:id", async (req, res) => {
   try {
     const updated = await Waste.findByIdAndUpdate(
