@@ -1,126 +1,66 @@
-import { useState } from "react";
-import API from "../api";
+const express = require("express");
+const router = express.Router();
+const Waste = require("../models/Waste");
+const upload = require("../middleware/upload");
 
-function WasteForm({ type, setSelectedType, wasteList, setWasteList, refreshWaste, setShowBhangarMenu }) {
+// ✅ SUBMIT WASTE (MATCHES YOUR FRONTEND API)
+router.post("/submit", upload.single("image"), async (req, res) => {
+  try {
+    const { type, description, location, weight, quantity } = req.body;
 
-  const [description, setDescription] = useState("");
-  const [location, setLocation] = useState("");
-  const [weight, setWeight] = useState("");
-  const [quantity, setQuantity] = useState("");
-  const [image, setImage] = useState(null);
+    const waste = await Waste.create({
+      type,
+      description,
+      location,
+      weight,
+      quantity,
+      image: req.file ? req.file.filename : null,
+      status: "Pending",
+    });
 
-  const handleSubmit = async () => {
+    res.json({
+      message: "Waste submitted successfully",
+      waste,
+    });
 
-    try {
+  } catch (err) {
+    console.error("WASTE SUBMIT ERROR:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+});
 
-      const token = localStorage.getItem("token");
+// ✅ GET ALL WASTE
+router.get("/", async (req, res) => {
+  try {
+    const wastes = await Waste.find();
+    res.json(wastes);
+  } catch (err) {
+    res.status(500).json({ message: "Server error" });
+  }
+});
 
-      const formData = new FormData();
-      formData.append("type", type);
-      formData.append("description", description);
-      formData.append("location", location);
-      formData.append("weight", weight);
-      formData.append("quantity", quantity);
+// ✅ UPDATE WASTE (ACCEPT / REJECT)
+router.put("/:id", async (req, res) => {
+  try {
+    const updated = await Waste.findByIdAndUpdate(
+      req.params.id,
+      req.body,
+      { new: true }
+    );
+    res.json(updated);
+  } catch (err) {
+    res.status(500).json({ message: "Server error" });
+  }
+});
 
-      if (image) {
-        formData.append("image", image);
-      }
+// ✅ DELETE WASTE
+router.delete("/:id", async (req, res) => {
+  try {
+    await Waste.findByIdAndDelete(req.params.id);
+    res.json({ message: "Deleted successfully" });
+  } catch (err) {
+    res.status(500).json({ message: "Server error" });
+  }
+});
 
-      await API.post("/waste/submit", formData, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      alert("Waste submitted successfully ✅");
-
-      refreshWaste();
-      setSelectedType("");
-
-    } catch (error) {
-
-      console.log("Waste submit error:", error);
-      alert("Error submitting waste ❌");
-
-    }
-
-  };
-
-  return (
-    <div className="form-page">
-      <div className="form-card">
-
-        <h2 className="form-title">{type} Waste Submission</h2>
-        <p className="form-subtitle">Operational Intake Form</p>
-
-        <div className="form-grid">
-
-          <div className="form-group full">
-            <label>Description</label>
-            <textarea
-              placeholder="Briefly describe the waste material"
-              onChange={(e) => setDescription(e.target.value)}
-            />
-          </div>
-
-          <div className="form-group">
-            <label>Pickup Location</label>
-            <input
-              type="text"
-              placeholder="Facility / Area"
-              onChange={(e) => setLocation(e.target.value)}
-            />
-          </div>
-
-          <div className="form-group">
-            <label>Quantity</label>
-            <input
-              type="number"
-              placeholder="Total units"
-              onChange={(e) => setQuantity(e.target.value)}
-            />
-          </div>
-
-          <div className="form-group">
-            <label>Estimated Weight (kg)</label>
-            <input
-              type="number"
-              placeholder="e.g. 2.5"
-              onChange={(e) => setWeight(e.target.value)}
-            />
-          </div>
-
-          <div className="form-group full">
-            <label>Attach Image</label>
-            <input
-              type="file"
-              accept="image/*"
-              className="file-input"
-              onChange={(e) => setImage(e.target.files[0])}
-            />
-          </div>
-
-        </div>
-
-        <div className="form-actions">
-
-          <button
-            className="secondary-btn"
-            onClick={() => setShowBhangarMenu(true)}
-          >
-            Cancel
-          </button>
-
-          <button
-            className="primary-btn"
-            onClick={handleSubmit}
-          >
-            Submit for Collection
-          </button>
-
-        </div>
-
-      </div>
-    </div>
-  );
-}
+module.exports = router;
