@@ -33,15 +33,17 @@ router.post("/login", async (req, res) => {
   }
 });
 
-// 🚚 GET ASSIGNED WASTES ✅ FIXED
+// 🚚 GET ASSIGNED WASTES ✅ FINAL FIX
 router.get("/wastes/:driverId", async (req, res) => {
   try {
-    const driverId = new mongoose.Types.ObjectId(req.params.driverId);
+    const driverId = req.params.driverId;
 
     const wastes = await Waste.find({
       $or: [
-        { driverId: driverId },          // new data
-        { assignedDriver: driverId }     // old data support
+        { driverId: driverId },                         // string match
+        { assignedDriver: driverId },                   // string match
+        { driverId: new mongoose.Types.ObjectId(driverId) },        // ObjectId match
+        { assignedDriver: new mongoose.Types.ObjectId(driverId) }   // ObjectId match
       ]
     });
 
