@@ -1,4 +1,3 @@
-import "./WasteForm.css";
 import { useState } from "react";
 import API from "../api";
 
